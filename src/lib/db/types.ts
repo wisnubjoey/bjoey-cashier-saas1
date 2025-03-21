@@ -4,14 +4,12 @@ import * as schema from './schema';
 export type Organization = typeof schema.organizations.$inferSelect;
 export type Product = typeof schema.products.$inferSelect;
 export type Sale = typeof schema.sales.$inferSelect;
-export type SaleItem = typeof schema.salesItems.$inferSelect;
-export type Outlet = typeof schema.outlets.$inferSelect;
+export type SaleItem = typeof schema.saleItems.$inferSelect;
 export type Subscription = typeof schema.subscriptions.$inferSelect;
 
 // Insert types (untuk menulis data)
 export type NewOrganization = typeof schema.organizations.$inferInsert;
 export type NewProduct = typeof schema.products.$inferInsert;
 export type NewSale = typeof schema.sales.$inferInsert;
-export type NewSaleItem = typeof schema.salesItems.$inferInsert;
-export type NewOutlet = typeof schema.outlets.$inferInsert;
+export type NewSaleItem = typeof schema.saleItems.$inferInsert;
 export type NewSubscription = typeof schema.subscriptions.$inferInsert;

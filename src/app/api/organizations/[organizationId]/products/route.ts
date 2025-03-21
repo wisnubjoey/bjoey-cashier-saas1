@@ -70,7 +70,7 @@ export async function POST(
     const body = await request.json();
     const { name, description, price, sku, barcode, stock, imageUrl } = body;
     
-    if (!name || !price) {
+    if (!name || price === undefined) {
       return NextResponse.json(
         { error: 'Name and price are required' }, 
         { status: 400 }

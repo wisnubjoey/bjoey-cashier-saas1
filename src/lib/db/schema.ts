@@ -19,64 +19,39 @@ export const organizations = pgTable('organizations', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-// Outlets
-export const outlets = pgTable('outlets', {
-  id: text('id').primaryKey().$defaultFn(() => createId()),
-  organizationId: text('organization_id')
-    .notNull()
-    .references(() => organizations.id, { onDelete: 'cascade' }),
-  name: text('name').notNull(),
-  address: text('address'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
-
 // Products
 export const products = pgTable('products', {
   id: text('id').primaryKey().$defaultFn(() => createId()),
-  organizationId: text('organization_id')
-    .notNull()
-    .references(() => organizations.id, { onDelete: 'cascade' }),
+  organizationId: text('organization_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   description: text('description'),
   price: decimal('price', { precision: 10, scale: 2 }).notNull(),
   sku: text('sku'),
   barcode: text('barcode'),
-  stock: integer('stock').notNull().default(0),
+  stock: integer('stock').default(0),
   imageUrl: text('image_url'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-// Sales
+// Sales/Transactions
 export const sales = pgTable('sales', {
   id: text('id').primaryKey().$defaultFn(() => createId()),
-  organizationId: text('organization_id')
-    .notNull()
-    .references(() => organizations.id, { onDelete: 'cascade' }),
-  outletId: text('outlet_id')
-    .notNull()
-    .references(() => outlets.id, { onDelete: 'cascade' }),
+  organizationId: text('organization_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
   total: decimal('total', { precision: 10, scale: 2 }).notNull(),
-  tax: decimal('tax', { precision: 10, scale: 2 }).default('0'),
-  discount: decimal('discount', { precision: 10, scale: 2 }).default('0'),
-  paymentMethod: paymentMethodEnum('payment_method').notNull(),
-  status: text('status').notNull().default('completed'),
+  paymentMethod: text('payment_method').notNull(),
+  customerName: text('customer_name'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
-// Sales Items
-export const salesItems = pgTable('sales_items', {
+// Sale Items (detail transaksi)
+export const saleItems = pgTable('sale_items', {
   id: text('id').primaryKey().$defaultFn(() => createId()),
-  saleId: text('sale_id')
-    .notNull()
-    .references(() => sales.id, { onDelete: 'cascade' }),
-  productId: text('product_id')
-    .notNull()
-    .references(() => products.id),
+  saleId: text('sale_id').notNull().references(() => sales.id, { onDelete: 'cascade' }),
+  productId: text('product_id').notNull().references(() => products.id),
   quantity: integer('quantity').notNull(),
   price: decimal('price', { precision: 10, scale: 2 }).notNull(),
-  total: decimal('total', { precision: 10, scale: 2 }).notNull(),
+  subtotal: decimal('subtotal', { precision: 10, scale: 2 }).notNull(),
 });
 
 // Subscriptions
@@ -96,18 +71,17 @@ export const subscriptions = pgTable('subscriptions', {
 
 // Relations
 export const organizationsRelations = relations(organizations, ({ many }) => ({
-  outlets: many(outlets),
   products: many(products),
   sales: many(sales),
   subscriptions: many(subscriptions),
 }));
 
-export const outletsRelations = relations(outlets, ({ one, many }) => ({
+export const productsRelations = relations(products, ({ one, many }) => ({
   organization: one(organizations, {
-    fields: [outlets.organizationId],
+    fields: [products.organizationId],
     references: [organizations.id],
   }),
-  sales: many(sales),
+  saleItems: many(saleItems),
 }));
 
 export const salesRelations = relations(sales, ({ one, many }) => ({
@@ -115,20 +89,16 @@ export const salesRelations = relations(sales, ({ one, many }) => ({
     fields: [sales.organizationId],
     references: [organizations.id],
   }),
-  outlet: one(outlets, {
-    fields: [sales.outletId],
-    references: [outlets.id],
-  }),
-  items: many(salesItems),
+  items: many(saleItems),
 }));
 
-export const salesItemsRelations = relations(salesItems, ({ one }) => ({
+export const saleItemsRelations = relations(saleItems, ({ one }) => ({
   sale: one(sales, {
-    fields: [salesItems.saleId],
+    fields: [saleItems.saleId],
     references: [sales.id],
   }),
   product: one(products, {
-    fields: [salesItems.productId],
+    fields: [saleItems.productId],
     references: [products.id],
   }),
 }));
