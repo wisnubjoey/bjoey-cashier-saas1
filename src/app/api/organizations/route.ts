@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { organizations } from '@/lib/db/schema';
 import { auth } from '@clerk/nextjs/server';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 // GET - Fetch all organizations for the current user
 export async function GET() {
@@ -30,7 +30,7 @@ export async function GET() {
 }
 
 // POST - Create a new organization
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
     const { userId } = await auth();
     
@@ -38,44 +38,51 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    const body = await request.json();
-    const { name, adminPassword } = body;
+    const { name, adminPassword } = await req.json();
     
+    // Validasi input
     if (!name || !adminPassword) {
       return NextResponse.json(
-        { error: 'Name and admin password are required' }, 
+        { error: 'Name and admin password are required' },
         { status: 400 }
       );
     }
     
-    // Generate slug from name
-    const slug = name.toLowerCase().replace(/\s+/g, '-');
-    
-    // Check if organization with this slug already exists
+    // Periksa apakah organisasi dengan nama yang sama sudah ada untuk pengguna ini
     const existingOrg = await db.query.organizations.findFirst({
-      where: eq(organizations.slug, slug)
+      where: and(
+        eq(organizations.name, name),
+        eq(organizations.userId, userId)
+      ),
     });
     
     if (existingOrg) {
       return NextResponse.json(
-        { error: 'An organization with this name already exists' }, 
-        { status: 409 }
+        { error: 'An organization with this name already exists for your account' },
+        { status: 400 }
       );
     }
     
-    // Create new organization
-    const newOrg = await db.insert(organizations).values({
-      name,
-      slug,
-      adminPassword,
-      userId,
-    }).returning();
+    // Buat slug yang unik dengan menambahkan userId
+    const baseSlug = name.toLowerCase().replace(/\s+/g, '-');
+    const uniqueSlug = `${baseSlug}-${userId.substring(0, 8)}`;
     
-    return NextResponse.json(newOrg[0], { status: 201 });
+    // Buat organisasi baru
+    const [newOrg] = await db
+      .insert(organizations)
+      .values({
+        name,
+        slug: uniqueSlug,
+        adminPassword,
+        userId,
+      })
+      .returning();
+    
+    return NextResponse.json(newOrg);
   } catch (error) {
     console.error('Error creating organization:', error);
     return NextResponse.json(
-      { error: 'Failed to create organization' }, 
+      { error: 'Failed to create organization' },
       { status: 500 }
     );
   }
