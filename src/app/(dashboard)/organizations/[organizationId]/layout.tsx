@@ -11,8 +11,10 @@ export default async function OrganizationLayout({
   params,
 }: {
   children: React.ReactNode;
-  params: { organizationId: string };
+  params: Promise<{ organizationId: string }>;
 }) {
+  const resolvedParams = await params;
+  const organizationId = resolvedParams.organizationId;
   const { userId } = await auth();
 
   if (!userId) {
@@ -22,7 +24,7 @@ export default async function OrganizationLayout({
   // Fetch organization details
   const org = await db.query.organizations.findFirst({
     where: and(
-      eq(organizations.id, params.organizationId),
+      eq(organizations.id, organizationId),
       eq(organizations.userId, userId)
     ),
   });
@@ -35,7 +37,10 @@ export default async function OrganizationLayout({
     <div className="h-full">
       <div className="h-full flex">
         <div className="hidden md:flex h-full w-56 flex-col fixed inset-y-0">
-          <SessionNavBar organizationId={org.id} organizationName={org.name} />
+          <SessionNavBar 
+            organizationId={organizationId} 
+            organizationName={org.name} 
+          />
         </div>
         <div className="md:pl-56 flex-1">
           <main className="h-full">{children}</main>

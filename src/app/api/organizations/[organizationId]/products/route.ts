@@ -7,7 +7,7 @@ import { eq, and } from 'drizzle-orm';
 // GET - Fetch all products for an organization
 export async function GET(
   request: Request,
-  { params }: { params: { organizationId: string } }
+  { params }: { params: Promise<{ organizationId: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -16,10 +16,14 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
+    // Resolve params first
+    const resolvedParams = await params;
+    const organizationId = resolvedParams.organizationId;
+    
     // Check if organization exists and belongs to user
     const org = await db.query.organizations.findFirst({
       where: and(
-        eq(organizations.id, params.organizationId),
+        eq(organizations.id, organizationId),
         eq(organizations.userId, userId)
       )
     });
@@ -30,7 +34,7 @@ export async function GET(
     
     // Fetch products
     const productsList = await db.query.products.findMany({
-      where: eq(products.organizationId, params.organizationId)
+      where: eq(products.organizationId, organizationId)
     });
     
     return NextResponse.json(productsList);
@@ -46,7 +50,7 @@ export async function GET(
 // POST - Create a new product
 export async function POST(
   request: Request,
-  { params }: { params: { organizationId: string } }
+  { params }: { params: Promise<{ organizationId: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -55,10 +59,14 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
+    // Resolve params first
+    const resolvedParams = await params;
+    const organizationId = resolvedParams.organizationId;
+    
     // Check if organization exists and belongs to user
     const org = await db.query.organizations.findFirst({
       where: and(
-        eq(organizations.id, params.organizationId),
+        eq(organizations.id, organizationId),
         eq(organizations.userId, userId)
       )
     });
@@ -79,7 +87,7 @@ export async function POST(
     
     // Create new product
     const newProduct = await db.insert(products).values({
-      organizationId: params.organizationId,
+      organizationId: organizationId,
       name,
       description,
       price,

@@ -7,7 +7,7 @@ import { eq, and } from 'drizzle-orm';
 // GET - Fetch all sales for an organization
 export async function GET(
   request: Request,
-  { params }: { params: { organizationId: string } }
+  { params }: { params: Promise<{ organizationId: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -16,10 +16,14 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
+    // Resolve params first
+    const resolvedParams = await params;
+    const organizationId = resolvedParams.organizationId;
+    
     // Check if organization exists and belongs to user
     const org = await db.query.organizations.findFirst({
       where: and(
-        eq(organizations.id, params.organizationId),
+        eq(organizations.id, organizationId),
         eq(organizations.userId, userId)
       )
     });
@@ -30,7 +34,7 @@ export async function GET(
     
     // Fetch sales
     const salesList = await db.query.sales.findMany({
-      where: eq(sales.organizationId, params.organizationId),
+      where: eq(sales.organizationId, organizationId),
       orderBy: (sales, { desc }) => [desc(sales.createdAt)],
       with: {
         items: {
@@ -54,7 +58,7 @@ export async function GET(
 // POST - Create a new sale
 export async function POST(
   request: Request,
-  { params }: { params: { organizationId: string } }
+  { params }: { params: Promise<{ organizationId: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -63,10 +67,14 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
+    // Resolve params first
+    const resolvedParams = await params;
+    const organizationId = resolvedParams.organizationId;
+    
     // Check if organization exists and belongs to user
     const org = await db.query.organizations.findFirst({
       where: and(
-        eq(organizations.id, params.organizationId),
+        eq(organizations.id, organizationId),
         eq(organizations.userId, userId)
       )
     });
@@ -99,7 +107,7 @@ export async function POST(
       const product = await db.query.products.findFirst({
         where: and(
           eq(products.id, item.productId),
-          eq(products.organizationId, params.organizationId)
+          eq(products.organizationId, organizationId)
         )
       });
       
@@ -132,7 +140,7 @@ export async function POST(
     
     // Create sale
     const newSale = await db.insert(sales).values({
-      organizationId: params.organizationId,
+      organizationId: organizationId,
       total: total.toString(),
       paymentMethod,
       customerName,

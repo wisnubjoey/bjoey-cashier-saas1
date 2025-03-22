@@ -7,7 +7,7 @@ import { subDays } from 'date-fns';
 
 export async function GET(
   request: Request,
-  { params }: { params: { organizationId: string } }
+  { params }: { params: Promise<{ organizationId: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -15,6 +15,10 @@ export async function GET(
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    
+    // Resolve params first
+    const resolvedParams = await params;
+    const organizationId = resolvedParams.organizationId;
     
     const { searchParams } = new URL(request.url);
     const timeRange = searchParams.get('timeRange') || '7days';
@@ -40,7 +44,7 @@ export async function GET(
     .from(sales)
     .where(
       and(
-        eq(sales.organizationId, params.organizationId),
+        eq(sales.organizationId, organizationId),
         gte(sales.createdAt, startDate)
       )
     );
@@ -54,7 +58,7 @@ export async function GET(
     .from(sales)
     .where(
       and(
-        eq(sales.organizationId, params.organizationId),
+        eq(sales.organizationId, organizationId),
         gte(sales.createdAt, startDate)
       )
     );
@@ -66,7 +70,7 @@ export async function GET(
       count: count()
     })
     .from(products)
-    .where(eq(products.organizationId, params.organizationId));
+    .where(eq(products.organizationId, organizationId));
     
     const totalProducts = productsCount[0]?.count || 0;
     
@@ -80,7 +84,7 @@ export async function GET(
         COUNT(*) as sales,
         SUM(CAST(total AS DECIMAL)) as revenue
       FROM sales
-      WHERE organization_id = ${params.organizationId}
+      WHERE organization_id = ${organizationId}
         AND created_at >= ${startDate}
       GROUP BY DATE(created_at)
       ORDER BY date ASC
@@ -96,7 +100,7 @@ export async function GET(
       FROM sale_items si
       JOIN products p ON si.product_id = p.id
       JOIN sales s ON si.sale_id = s.id
-      WHERE s.organization_id = ${params.organizationId}
+      WHERE s.organization_id = ${organizationId}
         AND s.created_at >= ${startDate}
       GROUP BY p.id, p.name
       ORDER BY quantity DESC

@@ -7,7 +7,7 @@ import { eq, and } from 'drizzle-orm';
 // GET - Fetch a single product
 export async function GET(
   request: Request,
-  { params }: { params: { organizationId: string; productId: string } }
+  { params }: { params: Promise<{ organizationId: string; productId: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -16,10 +16,15 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
+    // Resolve params first
+    const resolvedParams = await params;
+    const organizationId = resolvedParams.organizationId;
+    const productId = resolvedParams.productId;
+    
     // Check if organization exists and belongs to user
     const org = await db.query.organizations.findFirst({
       where: and(
-        eq(organizations.id, params.organizationId),
+        eq(organizations.id, organizationId),
         eq(organizations.userId, userId)
       )
     });
@@ -31,8 +36,8 @@ export async function GET(
     // Fetch product
     const product = await db.query.products.findFirst({
       where: and(
-        eq(products.id, params.productId),
-        eq(products.organizationId, params.organizationId)
+        eq(products.id, productId),
+        eq(products.organizationId, organizationId)
       )
     });
     
