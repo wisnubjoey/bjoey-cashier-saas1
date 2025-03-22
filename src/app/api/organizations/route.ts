@@ -13,12 +13,13 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    const orgs = await db.query.organizations.findMany({
+    // Fetch organizations
+    const orgList = await db.query.organizations.findMany({
       where: eq(organizations.userId, userId),
-      orderBy: (orgs, { desc }) => [desc(orgs.createdAt)]
+      orderBy: (organizations, { desc }) => [desc(organizations.createdAt)]
     });
     
-    return NextResponse.json(orgs);
+    return NextResponse.json(orgList);
   } catch (error) {
     console.error('Error fetching organizations:', error);
     return NextResponse.json(
