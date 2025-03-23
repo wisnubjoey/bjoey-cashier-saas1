@@ -1,4 +1,3 @@
-import { UserButton } from "@/components/auth/user-button";
 import Link from "next/link";
 
 export default function DashboardLayout({
@@ -13,7 +12,7 @@ export default function DashboardLayout({
           <Link href="/organizations" className="font-bold text-xl">
             SaaS Cashier
           </Link>
-          <UserButton />
+          
         </div>
       </header>
       <main className="flex-grow">
