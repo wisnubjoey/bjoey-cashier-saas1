@@ -4,7 +4,7 @@ import { products, organizations } from '@/lib/db/schema';
 import { auth } from '@clerk/nextjs/server';
 import { eq, and } from 'drizzle-orm';
 
-// GET - Fetch all products for an organization
+// GET - Get all products for an organization
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ organizationId: string }> }
@@ -32,9 +32,10 @@ export async function GET(
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
     }
     
-    // Fetch products
+    // Get all products for this organization
     const productsList = await db.query.products.findMany({
-      where: eq(products.organizationId, organizationId)
+      where: eq(products.organizationId, organizationId),
+      orderBy: (products, { asc }) => [asc(products.name)]
     });
     
     return NextResponse.json(productsList);
@@ -76,7 +77,7 @@ export async function POST(
     }
     
     const body = await request.json();
-    const { name, description, price, sku, barcode, stock, imageUrl } = body;
+    const { name, description, price, sku, barcode, stock, imageUrl, minStockLevel, costPrice } = body;
     
     if (!name || price === undefined) {
       return NextResponse.json(
@@ -94,7 +95,9 @@ export async function POST(
       sku,
       barcode,
       stock: stock || 0,
-      imageUrl
+      imageUrl,
+      minStockLevel: minStockLevel || 0,
+      costPrice: costPrice || null
     }).returning();
     
     return NextResponse.json(newProduct[0], { status: 201 });

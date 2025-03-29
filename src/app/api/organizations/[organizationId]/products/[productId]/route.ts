@@ -4,7 +4,7 @@ import { products, organizations } from '@/lib/db/schema';
 import { auth } from '@clerk/nextjs/server';
 import { eq, and } from 'drizzle-orm';
 
-// GET - Fetch a single product
+// GET - Get a specific product
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ organizationId: string; productId: string }> }
@@ -18,8 +18,7 @@ export async function GET(
     
     // Resolve params first
     const resolvedParams = await params;
-    const organizationId = resolvedParams.organizationId;
-    const productId = resolvedParams.productId;
+    const { organizationId, productId } = resolvedParams;
     
     // Check if organization exists and belongs to user
     const org = await db.query.organizations.findFirst({
@@ -33,7 +32,7 @@ export async function GET(
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
     }
     
-    // Fetch product
+    // Get the product
     const product = await db.query.products.findFirst({
       where: and(
         eq(products.id, productId),
@@ -58,7 +57,7 @@ export async function GET(
 // PUT - Update a product
 export async function PUT(
   request: Request,
-  { params }: { params: { organizationId: string; productId: string } }
+  { params }: { params: Promise<{ organizationId: string; productId: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -67,10 +66,14 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
+    // Resolve params first
+    const resolvedParams = await params;
+    const { organizationId, productId } = resolvedParams;
+    
     // Check if organization exists and belongs to user
     const org = await db.query.organizations.findFirst({
       where: and(
-        eq(organizations.id, params.organizationId),
+        eq(organizations.id, organizationId),
         eq(organizations.userId, userId)
       )
     });
@@ -79,11 +82,11 @@ export async function PUT(
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
     }
     
-    // Check if product exists
+    // Check if product exists and belongs to organization
     const existingProduct = await db.query.products.findFirst({
       where: and(
-        eq(products.id, params.productId),
-        eq(products.organizationId, params.organizationId)
+        eq(products.id, productId),
+        eq(products.organizationId, organizationId)
       )
     });
     
@@ -92,27 +95,30 @@ export async function PUT(
     }
     
     const body = await request.json();
-    const { name, description, price, sku, barcode, stock, imageUrl } = body;
+    const { name, description, price, sku, barcode, stock, imageUrl, minStockLevel, costPrice } = body;
     
     // Update product
-    const updatedProduct = await db.update(products)
+    const [updatedProduct] = await db
+      .update(products)
       .set({
-        name: name || existingProduct.name,
+        name: name !== undefined ? name : existingProduct.name,
         description,
         price: price !== undefined ? price : existingProduct.price,
         sku,
         barcode,
         stock: stock !== undefined ? stock : existingProduct.stock,
         imageUrl,
-        updatedAt: new Date(),
+        minStockLevel: minStockLevel !== undefined ? minStockLevel : existingProduct.minStockLevel,
+        costPrice,
+        updatedAt: new Date()
       })
       .where(and(
-        eq(products.id, params.productId),
-        eq(products.organizationId, params.organizationId)
+        eq(products.id, productId),
+        eq(products.organizationId, organizationId)
       ))
       .returning();
     
-    return NextResponse.json(updatedProduct[0]);
+    return NextResponse.json(updatedProduct);
   } catch (error) {
     console.error('Error updating product:', error);
     return NextResponse.json(
@@ -125,7 +131,7 @@ export async function PUT(
 // DELETE - Delete a product
 export async function DELETE(
   request: Request,
-  { params }: { params: { organizationId: string; productId: string } }
+  { params }: { params: Promise<{ organizationId: string; productId: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -134,10 +140,14 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
+    // Resolve params first
+    const resolvedParams = await params;
+    const { organizationId, productId } = resolvedParams;
+    
     // Check if organization exists and belongs to user
     const org = await db.query.organizations.findFirst({
       where: and(
-        eq(organizations.id, params.organizationId),
+        eq(organizations.id, organizationId),
         eq(organizations.userId, userId)
       )
     });
@@ -146,23 +156,11 @@ export async function DELETE(
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
     }
     
-    // Check if product exists
-    const existingProduct = await db.query.products.findFirst({
-      where: and(
-        eq(products.id, params.productId),
-        eq(products.organizationId, params.organizationId)
-      )
-    });
-    
-    if (!existingProduct) {
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
-    }
-    
-    // Delete product
+    // Delete the product
     await db.delete(products)
       .where(and(
-        eq(products.id, params.productId),
-        eq(products.organizationId, params.organizationId)
+        eq(products.id, productId),
+        eq(products.organizationId, organizationId)
       ));
     
     return NextResponse.json({ success: true });

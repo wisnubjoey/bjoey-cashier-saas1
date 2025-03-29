@@ -13,10 +13,11 @@ import {
   ShoppingCart,
   Store,
   LayoutDashboard,
+  BarChart,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/dashboard/sidebar/avatar"
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/dashboard/sidebar/button";
 import {
@@ -80,6 +81,26 @@ interface SidebarProps {
 export function SessionNavBar({ organizationId, organizationName }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const pathname = usePathname();
+  const router = useRouter();
+  
+  // Fungsi untuk menangani klik pada link yang dilindungi
+  const handleProtectedLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, path: string) => {
+    e.preventDefault();
+    
+    // Daftar path yang memerlukan autentikasi admin
+    const protectedPaths = ['/products', '/inventory', '/settings'];
+    
+    // Periksa apakah path yang diklik memerlukan autentikasi admin
+    const isProtected = protectedPaths.some(protectedPath => path.includes(protectedPath));
+    
+    if (isProtected) {
+      // Redirect ke halaman auth dengan returnUrl
+      router.push(`/organizations/${organizationId}/auth?returnUrl=${encodeURIComponent(path)}`);
+    } else {
+      // Jika tidak dilindungi, navigasi langsung
+      router.push(path);
+    }
+  };
   
   return (
     <motion.div
@@ -178,8 +199,10 @@ export function SessionNavBar({ organizationId, organizationName }: SidebarProps
                       </motion.li>
                     </Link>
                     
-                    <Link
+                    {/* Link yang dilindungi - Products */}
+                    <a
                       href={`/organizations/${organizationId}/products`}
+                      onClick={(e) => handleProtectedLinkClick(e, `/organizations/${organizationId}/products`)}
                       className={cn(
                         "flex h-8 w-full flex-row items-center rounded-md px-2 py-1.5 transition hover:bg-muted hover:text-primary",
                         pathname?.includes(`/organizations/${organizationId}/products`) &&
@@ -192,7 +215,7 @@ export function SessionNavBar({ organizationId, organizationName }: SidebarProps
                           <p className="ml-2 text-sm font-medium">Products</p>
                         )}
                       </motion.li>
-                    </Link>
+                    </a>
                     
                     <Link
                       href={`/organizations/${organizationId}/sales`}
@@ -205,15 +228,17 @@ export function SessionNavBar({ organizationId, organizationName }: SidebarProps
                       <ReceiptText className="h-4 w-4" />
                       <motion.li variants={variants}>
                         {!isCollapsed && (
-                          <p className="ml-2 text-sm font-medium">Sales</p>
+                          <p className="ml-2 text-sm font-medium">Sales History</p>
                         )}
                       </motion.li>
                     </Link>
                     
                     <Separator className="w-full my-2" />
                     
-                    <Link
+                    {/* Link yang dilindungi - Settings */}
+                    <a
                       href={`/organizations/${organizationId}/settings`}
+                      onClick={(e) => handleProtectedLinkClick(e, `/organizations/${organizationId}/settings`)}
                       className={cn(
                         "flex h-8 w-full flex-row items-center rounded-md px-2 py-1.5 transition hover:bg-muted hover:text-primary",
                         pathname?.includes(`/organizations/${organizationId}/settings`) &&
@@ -226,7 +251,25 @@ export function SessionNavBar({ organizationId, organizationName }: SidebarProps
                           <p className="ml-2 text-sm font-medium">Settings</p>
                         )}
                       </motion.li>
-                    </Link>
+                    </a>
+                    
+                    {/* Link yang dilindungi - Inventory */}
+                    <a
+                      href={`/organizations/${organizationId}/inventory`}
+                      onClick={(e) => handleProtectedLinkClick(e, `/organizations/${organizationId}/inventory`)}
+                      className={cn(
+                        "flex h-8 w-full flex-row items-center rounded-md px-2 py-1.5 transition hover:bg-muted hover:text-primary",
+                        pathname?.includes(`/organizations/${organizationId}/inventory`) &&
+                          "bg-muted text-blue-600",
+                      )}
+                    >
+                      <BarChart className="h-4 w-4" />
+                      <motion.li variants={variants}>
+                        {!isCollapsed && (
+                          <p className="ml-2 text-sm font-medium">Inventory</p>
+                        )}
+                      </motion.li>
+                    </a>
                   </div>
                 </ScrollArea>
               </div>

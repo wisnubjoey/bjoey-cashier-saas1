@@ -1,4 +1,5 @@
 CREATE TYPE "public"."payment_method" AS ENUM('cash', 'card', 'transfer', 'other');--> statement-breakpoint
+CREATE TYPE "public"."stock_reason" AS ENUM('sale', 'purchase', 'adjustment', 'return');--> statement-breakpoint
 CREATE TYPE "public"."subscription_status" AS ENUM('active', 'canceled', 'past_due');--> statement-breakpoint
 CREATE TYPE "public"."user_role" AS ENUM('admin', 'manager', 'cashier');--> statement-breakpoint
 CREATE TABLE "organizations" (
@@ -23,6 +24,8 @@ CREATE TABLE "products" (
 	"barcode" text,
 	"stock" integer DEFAULT 0,
 	"image_url" text,
+	"min_stock_level" integer DEFAULT 0,
+	"cost_price" numeric(10, 2),
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
@@ -33,7 +36,9 @@ CREATE TABLE "sale_items" (
 	"product_id" text NOT NULL,
 	"quantity" integer NOT NULL,
 	"price" numeric(10, 2) NOT NULL,
-	"subtotal" numeric(10, 2) NOT NULL
+	"subtotal" numeric(10, 2) NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "sales" (
@@ -42,7 +47,20 @@ CREATE TABLE "sales" (
 	"total" numeric(10, 2) NOT NULL,
 	"payment_method" text NOT NULL,
 	"customer_name" text,
-	"created_at" timestamp DEFAULT now() NOT NULL
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "stock_history" (
+	"id" text PRIMARY KEY NOT NULL,
+	"product_id" text NOT NULL,
+	"previous_stock" integer,
+	"new_stock" integer,
+	"change_amount" integer NOT NULL,
+	"reason" "stock_reason" NOT NULL,
+	"notes" text,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"user_id" text NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "subscriptions" (
@@ -61,4 +79,5 @@ ALTER TABLE "products" ADD CONSTRAINT "products_organization_id_organizations_id
 ALTER TABLE "sale_items" ADD CONSTRAINT "sale_items_sale_id_sales_id_fk" FOREIGN KEY ("sale_id") REFERENCES "public"."sales"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "sale_items" ADD CONSTRAINT "sale_items_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "sales" ADD CONSTRAINT "sales_organization_id_organizations_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organizations"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "stock_history" ADD CONSTRAINT "stock_history_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "subscriptions" ADD CONSTRAINT "subscriptions_organization_id_organizations_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organizations"("id") ON DELETE cascade ON UPDATE no action;

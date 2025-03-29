@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,8 @@ export default function AuthPage({ params }: { params: Promise<{ organizationId:
   const resolvedParams = use(params);
   const organizationId = resolvedParams.organizationId;
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnUrl = searchParams.get('returnUrl') || `/organizations/${organizationId}/dashboard`;
   
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -41,8 +43,8 @@ export default function AuthPage({ params }: { params: Promise<{ organizationId:
         throw new Error(data.error || "Authentication failed");
       }
       
-      // Redirect to products page
-      router.push(`/organizations/${organizationId}/products`);
+      // Redirect to the return URL
+      router.push(returnUrl);
     } catch (error) {
       console.error("Authentication error:", error);
       setError(error instanceof Error ? error.message : "Authentication failed");
@@ -57,7 +59,7 @@ export default function AuthPage({ params }: { params: Promise<{ organizationId:
         <CardHeader>
           <CardTitle>Enter Admin Password</CardTitle>
           <CardDescription>
-            Please enter the admin password to access products
+            Please enter the admin password to access this page
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>

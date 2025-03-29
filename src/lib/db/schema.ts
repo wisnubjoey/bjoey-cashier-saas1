@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp,  integer,  pgEnum, decimal } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, integer, pgEnum, decimal } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { createId } from '@paralleldrive/cuid2';
 
@@ -6,6 +6,7 @@ import { createId } from '@paralleldrive/cuid2';
 export const subscriptionStatusEnum = pgEnum('subscription_status', ['active', 'canceled', 'past_due']);
 export const userRoleEnum = pgEnum('user_role', ['admin', 'manager', 'cashier']);
 export const paymentMethodEnum = pgEnum('payment_method', ['cash', 'card', 'transfer', 'other']);
+export const stockReasonEnum = pgEnum('stock_reason', ['sale', 'purchase', 'adjustment', 'return']);
 
 // Organizations (Tenant)
 export const organizations = pgTable('organizations', {
@@ -30,6 +31,8 @@ export const products = pgTable('products', {
   barcode: text('barcode'),
   stock: integer('stock').default(0),
   imageUrl: text('image_url'),
+  minStockLevel: integer('min_stock_level').default(0),
+  costPrice: decimal('cost_price', { precision: 10, scale: 2 }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -42,6 +45,7 @@ export const sales = pgTable('sales', {
   paymentMethod: text('payment_method').notNull(),
   customerName: text('customer_name'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
 // Sale Items (detail transaksi)
@@ -52,6 +56,8 @@ export const saleItems = pgTable('sale_items', {
   quantity: integer('quantity').notNull(),
   price: decimal('price', { precision: 10, scale: 2 }).notNull(),
   subtotal: decimal('subtotal', { precision: 10, scale: 2 }).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
 // Subscriptions
@@ -69,6 +75,19 @@ export const subscriptions = pgTable('subscriptions', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+// Stock History (riwayat perubahan stok)
+export const stockHistory = pgTable('stock_history', {
+  id: text('id').primaryKey().$defaultFn(() => createId()),
+  productId: text('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+  previousStock: integer('previous_stock'),
+  newStock: integer('new_stock'),
+  changeAmount: integer('change_amount').notNull(),
+  reason: stockReasonEnum('reason').notNull(),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  userId: text('user_id').notNull(), // Clerk user ID
+});
+
 // Relations
 export const organizationsRelations = relations(organizations, ({ many }) => ({
   products: many(products),
@@ -82,6 +101,7 @@ export const productsRelations = relations(products, ({ one, many }) => ({
     references: [organizations.id],
   }),
   saleItems: many(saleItems),
+  stockHistories: many(stockHistory),
 }));
 
 export const salesRelations = relations(sales, ({ one, many }) => ({
@@ -99,6 +119,13 @@ export const saleItemsRelations = relations(saleItems, ({ one }) => ({
   }),
   product: one(products, {
     fields: [saleItems.productId],
+    references: [products.id],
+  }),
+}));
+
+export const stockHistoryRelations = relations(stockHistory, ({ one }) => ({
+  product: one(products, {
+    fields: [stockHistory.productId],
     references: [products.id],
   }),
 }));
