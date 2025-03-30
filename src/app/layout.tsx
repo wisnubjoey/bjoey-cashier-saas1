@@ -2,18 +2,21 @@ import { type Metadata } from 'next'
 import {
   ClerkProvider,
 } from '@clerk/nextjs'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Inter, Poppins } from 'next/font/google'
 import './globals.css'
 import { Toaster } from "@/components/ui/sonner";
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+const inter = Inter({
   subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
 })
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
+const poppins = Poppins({
+  weight: ['400', '500', '600', '700'],
   subsets: ['latin'],
+  variable: '--font-poppins',
+  display: 'swap',
 })
 
 export const metadata: Metadata = {
@@ -29,7 +32,7 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
-        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <body className={`${inter.variable} ${poppins.variable} antialiased`}>
           
           {children}
           <Toaster />
