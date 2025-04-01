@@ -7,7 +7,6 @@ import {
   ChevronsUpDown,
   LogOut,
   Settings,
-  UserCircle,
   Package,
   ReceiptText,
   ShoppingCart,
@@ -17,14 +16,13 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/dashboard/sidebar/avatar"
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/dashboard/sidebar/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/dashboard/sidebar/dropdown-menu";
 import { Separator } from "@/components/dashboard/sidebar/separator";
@@ -81,26 +79,6 @@ interface SidebarProps {
 export function SessionNavBar({ organizationId, organizationName }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const pathname = usePathname();
-  const router = useRouter();
-  
-  // Fungsi untuk menangani klik pada link yang dilindungi
-  const handleProtectedLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, path: string) => {
-    e.preventDefault();
-    
-    // Daftar path yang memerlukan autentikasi admin
-    const protectedPaths = ['/products', '/inventory', '/settings'];
-    
-    // Periksa apakah path yang diklik memerlukan autentikasi admin
-    const isProtected = protectedPaths.some(protectedPath => path.includes(protectedPath));
-    
-    if (isProtected) {
-      // Redirect ke halaman auth dengan returnUrl
-      router.push(`/organizations/${organizationId}/auth?returnUrl=${encodeURIComponent(path)}`);
-    } else {
-      // Jika tidak dilindungi, navigasi langsung
-      router.push(path);
-    }
-  };
   
   return (
     <motion.div
@@ -115,21 +93,21 @@ export function SessionNavBar({ organizationId, organizationName }: SidebarProps
       onMouseLeave={() => setIsCollapsed(true)}
     >
       <motion.div
-        className={`relative z-40 flex text-muted-foreground h-full shrink-0 flex-col bg-white dark:bg-black transition-all`}
+        className={`relative z-40 flex text-gray-700 h-full shrink-0 flex-col bg-white transition-all`}
         variants={contentVariants}
       >
         <motion.ul variants={staggerVariants} className="flex h-full flex-col">
           <div className="flex grow flex-col items-center">
-            <div className="flex h-[54px] w-full shrink-0  border-b p-2">
-              <div className=" mt-[1.5px] flex w-full">
+            <div className="flex h-[54px] w-full shrink-0 border-b p-2">
+              <div className="mt-[1.5px] flex w-full">
                 <DropdownMenu modal={false}>
                   <DropdownMenuTrigger className="w-full" asChild>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="flex w-fit items-center gap-2  px-2" 
+                      className="flex w-fit items-center gap-2 px-2 hover:bg-gray-100" 
                     >
-                      <Avatar className='rounded size-4'>
+                      <Avatar className='rounded size-4 bg-green-600 text-white'>
                         <AvatarFallback>O</AvatarFallback>
                       </Avatar>
                       <motion.li
@@ -138,17 +116,16 @@ export function SessionNavBar({ organizationId, organizationName }: SidebarProps
                       >
                         {!isCollapsed && (
                           <>
-                            <p className="text-sm font-medium  ">
+                            <p className="text-sm font-medium">
                               {organizationName}
                             </p>
-                            <ChevronsUpDown className="h-4 w-4 text-muted-foreground/50" />
+                            <ChevronsUpDown className="h-4 w-4 text-gray-400" />
                           </>
                         )}
                       </motion.li>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start">
-                    
                     <DropdownMenuItem asChild>
                       <Link
                         href="/organizations"
@@ -163,19 +140,22 @@ export function SessionNavBar({ organizationId, organizationName }: SidebarProps
               </div>
             </div>
 
-            <div className=" flex h-full w-full flex-col">
+            <div className="flex h-full w-full flex-col">
               <div className="flex grow flex-col gap-4">
                 <ScrollArea className="h-16 grow p-2">
                   <div className={cn("flex w-full flex-col gap-1")}>
                     <Link
                       href={`/organizations/${organizationId}/dashboard`}
                       className={cn(
-                        "flex h-8 w-full flex-row items-center rounded-md px-2 py-1.5 transition hover:bg-muted hover:text-primary",
+                        "flex h-8 w-full flex-row items-center rounded-md px-2 py-1.5 transition hover:bg-gray-100",
                         pathname?.includes(`/organizations/${organizationId}/dashboard`) &&
-                          "bg-muted text-blue-600",
+                          "bg-gray-100 text-green-600",
                       )}
                     >
-                      <LayoutDashboard className="h-4 w-4" />
+                      <LayoutDashboard className={cn(
+                        "h-4 w-4",
+                        pathname?.includes(`/organizations/${organizationId}/dashboard`) ? "text-green-600" : "text-gray-600"
+                      )} />
                       <motion.li variants={variants}>
                         {!isCollapsed && (
                           <p className="ml-2 text-sm font-medium">Dashboard</p>
@@ -186,12 +166,15 @@ export function SessionNavBar({ organizationId, organizationName }: SidebarProps
                     <Link
                       href={`/organizations/${organizationId}/pos`}
                       className={cn(
-                        "flex h-8 w-full flex-row items-center rounded-md px-2 py-1.5 transition hover:bg-muted hover:text-primary",
+                        "flex h-8 w-full flex-row items-center rounded-md px-2 py-1.5 transition hover:bg-gray-100",
                         pathname?.includes(`/organizations/${organizationId}/pos`) &&
-                          "bg-muted text-blue-600",
+                          "bg-gray-100 text-green-600",
                       )}
                     >
-                      <ShoppingCart className="h-4 w-4" />
+                      <ShoppingCart className={cn(
+                        "h-4 w-4",
+                        pathname?.includes(`/organizations/${organizationId}/pos`) ? "text-green-600" : "text-gray-600"
+                      )} />
                       <motion.li variants={variants}>
                         {!isCollapsed && (
                           <p className="ml-2 text-sm font-medium">POS</p>
@@ -202,14 +185,16 @@ export function SessionNavBar({ organizationId, organizationName }: SidebarProps
                     {/* Link yang dilindungi - Products */}
                     <a
                       href={`/organizations/${organizationId}/products`}
-                      onClick={(e) => handleProtectedLinkClick(e, `/organizations/${organizationId}/products`)}
                       className={cn(
-                        "flex h-8 w-full flex-row items-center rounded-md px-2 py-1.5 transition hover:bg-muted hover:text-primary",
+                        "flex h-8 w-full flex-row items-center rounded-md px-2 py-1.5 transition hover:bg-gray-100",
                         pathname?.includes(`/organizations/${organizationId}/products`) &&
-                          "bg-muted text-blue-600",
+                          "bg-gray-100 text-green-600",
                       )}
                     >
-                      <Package className="h-4 w-4" />
+                      <Package className={cn(
+                        "h-4 w-4",
+                        pathname?.includes(`/organizations/${organizationId}/products`) ? "text-green-600" : "text-gray-600"
+                      )} />
                       <motion.li variants={variants}>
                         {!isCollapsed && (
                           <p className="ml-2 text-sm font-medium">Products</p>
@@ -220,12 +205,15 @@ export function SessionNavBar({ organizationId, organizationName }: SidebarProps
                     <Link
                       href={`/organizations/${organizationId}/sales`}
                       className={cn(
-                        "flex h-8 w-full flex-row items-center rounded-md px-2 py-1.5 transition hover:bg-muted hover:text-primary",
+                        "flex h-8 w-full flex-row items-center rounded-md px-2 py-1.5 transition hover:bg-gray-100",
                         pathname?.includes(`/organizations/${organizationId}/sales`) &&
-                          "bg-muted text-blue-600",
+                          "bg-gray-100 text-green-600",
                       )}
                     >
-                      <ReceiptText className="h-4 w-4" />
+                      <ReceiptText className={cn(
+                        "h-4 w-4",
+                        pathname?.includes(`/organizations/${organizationId}/sales`) ? "text-green-600" : "text-gray-600"
+                      )} />
                       <motion.li variants={variants}>
                         {!isCollapsed && (
                           <p className="ml-2 text-sm font-medium">Sales History</p>
@@ -238,14 +226,16 @@ export function SessionNavBar({ organizationId, organizationName }: SidebarProps
                     {/* Link yang dilindungi - Settings */}
                     <a
                       href={`/organizations/${organizationId}/settings`}
-                      onClick={(e) => handleProtectedLinkClick(e, `/organizations/${organizationId}/settings`)}
                       className={cn(
-                        "flex h-8 w-full flex-row items-center rounded-md px-2 py-1.5 transition hover:bg-muted hover:text-primary",
+                        "flex h-8 w-full flex-row items-center rounded-md px-2 py-1.5 transition hover:bg-gray-100",
                         pathname?.includes(`/organizations/${organizationId}/settings`) &&
-                          "bg-muted text-blue-600",
+                          "bg-gray-100 text-green-600",
                       )}
                     >
-                      <Settings className="h-4 w-4" />
+                      <Settings className={cn(
+                        "h-4 w-4",
+                        pathname?.includes(`/organizations/${organizationId}/settings`) ? "text-green-600" : "text-gray-600"
+                      )} />
                       <motion.li variants={variants}>
                         {!isCollapsed && (
                           <p className="ml-2 text-sm font-medium">Settings</p>
@@ -256,14 +246,16 @@ export function SessionNavBar({ organizationId, organizationName }: SidebarProps
                     {/* Link yang dilindungi - Inventory */}
                     <a
                       href={`/organizations/${organizationId}/inventory`}
-                      onClick={(e) => handleProtectedLinkClick(e, `/organizations/${organizationId}/inventory`)}
                       className={cn(
-                        "flex h-8 w-full flex-row items-center rounded-md px-2 py-1.5 transition hover:bg-muted hover:text-primary",
+                        "flex h-8 w-full flex-row items-center rounded-md px-2 py-1.5 transition hover:bg-gray-100",
                         pathname?.includes(`/organizations/${organizationId}/inventory`) &&
-                          "bg-muted text-blue-600",
+                          "bg-gray-100 text-green-600",
                       )}
                     >
-                      <BarChart className="h-4 w-4" />
+                      <BarChart className={cn(
+                        "h-4 w-4",
+                        pathname?.includes(`/organizations/${organizationId}/inventory`) ? "text-green-600" : "text-gray-600"
+                      )} />
                       <motion.li variants={variants}>
                         {!isCollapsed && (
                           <p className="ml-2 text-sm font-medium">Inventory</p>
@@ -274,50 +266,20 @@ export function SessionNavBar({ organizationId, organizationName }: SidebarProps
                 </ScrollArea>
               </div>
               
-              <div className="flex flex-col p-2">
-                <div>
-                  <DropdownMenu modal={false}>
-                    <DropdownMenuTrigger className="w-full">
-                      <div className="flex h-8 w-full flex-row items-center gap-2 rounded-md px-2 py-1.5 transition hover:bg-muted hover:text-primary">
-                        <Avatar className="size-4">
-                          <AvatarFallback>
-                            A
-                          </AvatarFallback>
-                        </Avatar>
-                        <motion.li
-                          variants={variants}
-                          className="flex w-full items-center gap-2"
-                        >
-                          {!isCollapsed && (
-                            <>
-                              <p className="text-sm font-medium">Account</p>
-                              <ChevronsUpDown className="ml-auto h-4 w-4 text-muted-foreground/50" />
-                            </>
-                          )}
-                        </motion.li>
-                      </div>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start">
-                      <DropdownMenuItem
-                        asChild
-                        className="flex items-center gap-2"
-                      >
-                        <Link href="/account/profile">
-                          <UserCircle className="h-4 w-4" /> Profile
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        asChild
-                        className="flex items-center gap-2 text-red-500"
-                      >
-                        <Link href="/sign-out">
-                          <LogOut className="h-4 w-4" /> Sign out
-                        </Link>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
+              <div className="p-2">
+                <Link
+                  href="/logout"
+                  className={cn(
+                    "flex h-8 w-full flex-row items-center rounded-md px-2 py-1.5 transition hover:bg-gray-100 text-gray-700"
+                  )}
+                >
+                  <LogOut className="h-4 w-4" />
+                  <motion.li variants={variants}>
+                    {!isCollapsed && (
+                      <p className="ml-2 text-sm font-medium">Logout</p>
+                    )}
+                  </motion.li>
+                </Link>
               </div>
             </div>
           </div>

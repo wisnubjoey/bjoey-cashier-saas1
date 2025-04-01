@@ -1,0 +1,120 @@
+/* Dashboard Theme CSS - White and Green */
+
+.dashboard-button-primary {
+  background-color: #22c55e; /* green-600 */
+  color: white;
+  transition: all 0.2s ease;
+}
+
+.dashboard-button-primary:hover {
+  background-color: #16a34a; /* green-700 */
+}
+
+.dashboard-button-secondary {
+  background-color: white;
+  color: #333;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+}
+
+.dashboard-button-secondary:hover {
+  background-color: #f9fafb;
+}
+
+.dashboard-button-outline {
+  background-color: white;
+  color: #22c55e;
+  border: 1px solid #22c55e;
+  transition: all 0.2s ease;
+}
+
+.dashboard-button-outline:hover {
+  background-color: #f0fdf4; /* green-50 */
+}
+
+.dashboard-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background-color: white;
+  overflow: hidden;
+}
+
+.dashboard-card-header {
+  border-bottom: 1px solid #f3f4f6;
+  padding: 1rem 1.5rem;
+}
+
+.dashboard-card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111;
+}
+
+.dashboard-card-content {
+  padding: 1.5rem;
+}
+
+.dashboard-link {
+  color: #22c55e; /* green-600 */
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.dashboard-link:hover {
+  text-decoration: underline;
+}
+
+.dashboard-sidebar {
+  background-color: white;
+  color: #333;
+  border-right: 1px solid #e5e7eb;
+  width: 14rem;
+  height: 100%;
+}
+
+.dashboard-sidebar-item {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  color: #4b5563; /* gray-600 */
+  transition: all 0.2s ease;
+}
+
+.dashboard-sidebar-item:hover {
+  background-color: #f9fafb; /* gray-50 */
+}
+
+.dashboard-sidebar-item.active {
+  background-color: #f0fdf4; /* green-50 */
+  color: #22c55e; /* green-600 */
+}
+
+.dashboard-sidebar-item .icon {
+  margin-right: 0.75rem;
+  color: #6b7280; /* gray-500 */
+}
+
+.dashboard-sidebar-item.active .icon {
+  color: #22c55e; /* green-600 */
+}
+
+.dashboard-stats-value {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #111;
+  line-height: 1.2;
+}
+
+.dashboard-stats-label {
+  font-size: 0.75rem;
+  color: #6b7280; /* gray-500 */
+  margin-top: 0.25rem;
+}
+
+.dashboard-page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 1.5rem;
+} 

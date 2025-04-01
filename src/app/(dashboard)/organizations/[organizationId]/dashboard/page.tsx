@@ -89,40 +89,40 @@ export default function DashboardPage({ params }: { params: Promise<{ organizati
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle>Total Sales</CardTitle>
+        <Card className="border border-gray-200 shadow-sm">
+          <CardHeader className="pb-2 border-b border-gray-100">
+            <CardTitle className="text-lg font-medium">Total Sales</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-4">
             <div className="text-3xl font-bold">{formatPrice(stats.totalSales)}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              <TrendingUp className="inline h-4 w-4 text-green-500 mr-1" />
+            <p className="text-xs text-gray-500 mt-1">
+              <TrendingUp className="inline h-4 w-4 text-green-600 mr-1" />
               For the selected period
             </p>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle>Orders</CardTitle>
+        <Card className="border border-gray-200 shadow-sm">
+          <CardHeader className="pb-2 border-b border-gray-100">
+            <CardTitle className="text-lg font-medium">Orders</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-4">
             <div className="text-3xl font-bold">{stats.totalOrders}</div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-gray-500 mt-1">
               Avg. {formatPrice(stats.averageOrderValue)} per order
             </p>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle>Inventory Value</CardTitle>
+        <Card className="border border-gray-200 shadow-sm">
+          <CardHeader className="pb-2 border-b border-gray-100">
+            <CardTitle className="text-lg font-medium">Inventory Value</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-4">
             <div className="text-3xl font-bold">
               {formatPrice(inventoryData.totalInventoryValue)}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-gray-500 mt-1">
               {inventoryData.totalProducts} products in stock
             </p>
           </CardContent>
@@ -130,36 +130,36 @@ export default function DashboardPage({ params }: { params: Promise<{ organizati
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
+        <Card className="border border-gray-200 shadow-sm">
+          <CardHeader className="border-b border-gray-100">
+            <CardTitle className="text-lg font-medium">Quick Actions</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
-            <Button className="w-full" onClick={() => window.location.href = `/organizations/${organizationId}/pos`}>
+          <CardContent className="space-y-2 pt-4">
+            <Button className="w-full bg-green-600 hover:bg-green-700 text-white" onClick={() => window.location.href = `/organizations/${organizationId}/pos`}>
               Open POS
             </Button>
-            <Button className="w-full" variant="outline" onClick={() => window.location.href = `/organizations/${organizationId}/products`}>
+            <Button className="w-full border-green-600 text-green-600 hover:bg-green-50" variant="outline" onClick={() => window.location.href = `/organizations/${organizationId}/products`}>
               Manage Products
             </Button>
-            <Button className="w-full" variant="outline" onClick={() => window.location.href = `/organizations/${organizationId}/inventory`}>
+            <Button className="w-full bg-gray-100 text-gray-800 hover:bg-gray-200 border-gray-200" variant="outline" onClick={() => window.location.href = `/organizations/${organizationId}/inventory`}>
               View Inventory
             </Button>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle>Low Stock Items</CardTitle>
+        <Card className="border border-gray-200 shadow-sm">
+          <CardHeader className="pb-2 border-b border-gray-100">
+            <CardTitle className="text-lg font-medium">Low Stock Items</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-4">
             <div className="flex items-center">
               <div className="text-3xl font-bold">{inventoryData.lowStockProducts}</div>
               {inventoryData.lowStockProducts > 0 && (
                 <AlertTriangle className="ml-2 h-5 w-5 text-amber-500" />
               )}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              <Link href={`/organizations/${organizationId}/inventory`} className="text-blue-500 hover:underline">
+            <p className="text-xs text-gray-500 mt-1">
+              <Link href={`/organizations/${organizationId}/inventory`} className="text-green-600 hover:underline">
                 View inventory report
               </Link>
             </p>

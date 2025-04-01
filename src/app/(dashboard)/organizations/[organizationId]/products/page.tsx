@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { use } from "react";
+import { withAdminAuth } from "@/components/withAdminAuth";
 
 interface Product {
   id: string;
@@ -33,9 +33,8 @@ interface Product {
   barcode: string | null;
 }
 
-export default function ProductsPage({ params }: { params: Promise<{ organizationId: string }> }) {
-  const resolvedParams = use(params);
-  const organizationId = resolvedParams.organizationId;
+function ProductsPage({ params }: { params: Promise<{ organizationId: string }> }) {
+  const { organizationId } = use(params);
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -220,4 +219,7 @@ export default function ProductsPage({ params }: { params: Promise<{ organizatio
       </Dialog>
     </div>
   );
-} 
+}
+
+// Wrap the component with admin auth protection
+export default withAdminAuth(ProductsPage); 

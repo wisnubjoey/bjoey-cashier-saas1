@@ -34,7 +34,7 @@ export default async function OrganizationLayout({
   }
 
   return (
-    <div className="h-full">
+    <div className="h-full bg-white">
       <div className="h-full flex">
         <div className="hidden md:flex h-full w-56 flex-col fixed inset-y-0">
           <SessionNavBar 
@@ -46,7 +46,7 @@ export default async function OrganizationLayout({
           <main className="h-full">{children}</main>
         </div>
       </div>
-      <Toaster />
+      <Toaster position="top-center" />
     </div>
   );
 } 

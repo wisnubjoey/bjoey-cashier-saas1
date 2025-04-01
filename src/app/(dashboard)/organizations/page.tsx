@@ -61,16 +61,22 @@ export default function OrganizationsPage() {
   return (
     <div className="p-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Your Organizations</h1>
-        <Button onClick={() => router.push('/organizations/new')}>
+        <h1 className="text-2xl font-bold dashboard-page-title">Your Organizations</h1>
+        <Button 
+          onClick={() => router.push('/organizations/new')}
+          className="bg-green-600 hover:bg-green-700 text-white"
+        >
           <Plus className="mr-2 h-4 w-4" /> New Organization
         </Button>
       </div>
       
       {organizations.length === 0 ? (
-        <div className="text-center p-8 border rounded-lg">
-          <p className="text-muted-foreground mb-4">You don&apos;t have any organizations yet.</p>
-          <Button onClick={() => router.push('/organizations/new')}>
+        <div className="text-center p-8 border rounded-lg border-gray-200 shadow-sm">
+          <p className="text-gray-500 mb-4">You don&apos;t have any organizations yet.</p>
+          <Button 
+            onClick={() => router.push('/organizations/new')}
+            className="bg-green-600 hover:bg-green-700 text-white"
+          >
             Create your first organization
           </Button>
         </div>
@@ -79,23 +85,26 @@ export default function OrganizationsPage() {
           {organizations.map((org) => (
             <Card 
               key={org.id} 
-              className="cursor-pointer hover:bg-accent/50 transition-colors"
+              className="cursor-pointer hover:border-green-600 hover:shadow-md transition-all border-gray-200 shadow-sm"
               onClick={() => handleSelectOrganization(org.id)}
             >
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Store className="mr-2 h-5 w-5" />
+                <CardTitle className="flex items-center text-lg">
+                  <Store className="mr-2 h-5 w-5 text-green-600" />
                   {org.name}
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-gray-500">
                   Created on {new Date(org.createdAt).toLocaleDateString()}
                 </CardDescription>
               </CardHeader>
               <CardFooter>
-                <Button variant="outline" className="w-full" onClick={(e) => {
-                  e.stopPropagation();
-                  handleSelectOrganization(org.id);
-                }}>
+                <Button 
+                  className="w-full bg-green-600 hover:bg-green-700 text-white" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSelectOrganization(org.id);
+                  }}
+                >
                   Select
                 </Button>
               </CardFooter>

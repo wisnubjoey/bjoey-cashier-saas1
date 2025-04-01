@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { UserButton, useUser } from "@clerk/nextjs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -18,10 +18,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { withAdminAuth } from "@/components/withAdminAuth";
 
-export default function SettingsPage({ params }: { params: Promise<{ organizationId: string }> }) {
-  const resolvedParams = use(params);
-  const organizationId = resolvedParams.organizationId;
+function SettingsPage({ params }: { params: Promise<{ organizationId: string }> }) {
+  const { organizationId } = use(params);
   const { user } = useUser();
   const router = useRouter();
 
@@ -381,4 +381,7 @@ export default function SettingsPage({ params }: { params: Promise<{ organizatio
       </Tabs>
     </div>
   );
-} 
+}
+
+// Wrap the component with admin auth protection
+export default withAdminAuth(SettingsPage); 

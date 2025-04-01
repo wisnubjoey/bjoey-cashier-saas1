@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/table";
 import { Search, AlertTriangle } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { withAdminAuth } from "@/components/withAdminAuth";
+import { use } from "react";
 
 interface Product {
   id: string;
@@ -29,10 +31,8 @@ interface Product {
 
 // Default low stock threshold
 const DEFAULT_LOW_STOCK_THRESHOLD = 3;
-
-export default function InventoryReportPage({ params }: { params: Promise<{ organizationId: string }> }) {
-  const resolvedParams = use(params);
-  const organizationId = resolvedParams.organizationId;
+function InventoryReportPage({ params }: { params: Promise<{ organizationId: string }> }) {
+  const { organizationId } = use(params);
   const router = useRouter();
   
   const [products, setProducts] = useState<Product[]>([]);
@@ -321,4 +321,6 @@ export default function InventoryReportPage({ params }: { params: Promise<{ orga
       </Card>
     </div>
   );
-} 
+}
+// Wrap the component with admin auth protection
+export default withAdminAuth(InventoryReportPage);
