@@ -8,9 +8,10 @@ dotenv.config({ path: '.env.local' });
 
 // Check if DATABASE_URL exists
 if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL is not set in .env.local');
+  console.error('Warning: DATABASE_URL is not set in .env.local');
 }
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const connectionString = process.env.DATABASE_URL || '';
+const pool = new Pool({ connectionString });
 
 export const db = drizzle(pool, { schema });

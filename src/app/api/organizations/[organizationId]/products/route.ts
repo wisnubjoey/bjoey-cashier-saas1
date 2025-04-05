@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { products, organizations } from '@/lib/db/schema';
 import { auth } from '@clerk/nextjs/server';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, count } from 'drizzle-orm';
+import { canUseFeature } from "@/lib/subscription";
 
 // GET - Get all products for an organization
 export async function GET(
@@ -74,6 +75,22 @@ export async function POST(
     
     if (!org) {
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
+    }
+    
+    // Count existing products for this organization to check subscription limits
+    const productCount = await db.select({ count: count() })
+      .from(products)
+      .where(eq(products.organizationId, organizationId));
+    
+    const currentCount = productCount[0]?.count || 0;
+    
+    // Check if user can create more products based on their subscription
+    const canCreate = await canUseFeature(userId, 'products', currentCount);
+    
+    if (!canCreate) {
+      return NextResponse.json({
+        error: 'You have reached the product limit for your plan. Please upgrade to create more products.'
+      }, { status: 403 });
     }
     
     const body = await request.json();

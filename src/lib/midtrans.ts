@@ -4,16 +4,22 @@
  */
 
 // Sandbox credentials and configuration
-const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY || "SB-Mid-server-YOUR_SERVER_KEY";
-const MIDTRANS_CLIENT_KEY = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || "SB-Mid-client-YOUR_CLIENT_KEY";
+const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY || "";
+const MIDTRANS_CLIENT_KEY = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || "";
 const MIDTRANS_SNAP_URL = "https://app.sandbox.midtrans.com/snap/snap.js";
 const MIDTRANS_API_URL = "https://api.sandbox.midtrans.com";
 
 // Configuration for production (to be used later)
-// const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
-// const MIDTRANS_CLIENT_KEY = process.env.MIDTRANS_CLIENT_KEY;
 // const MIDTRANS_SNAP_URL = "https://app.midtrans.com/snap/snap.js";
 // const MIDTRANS_API_URL = "https://api.midtrans.com";
+
+// Export the Snap URL for client-side use
+export const MIDTRANS_CLIENT_SNAP_URL = MIDTRANS_SNAP_URL;
+
+// For debugging purposes
+console.log('Midtrans configuration loaded:');
+console.log('- Client Key exists:', !!MIDTRANS_CLIENT_KEY);
+console.log('- Server Key exists:', !!MIDTRANS_SERVER_KEY);
 
 export const PLANS = {
   free: {
@@ -78,6 +84,8 @@ export async function createSnapToken(
     }
   };
 
+  console.log('Creating Midtrans transaction with payload:', JSON.stringify(payload));
+  
   try {
     const response = await fetch(`${MIDTRANS_API_URL}/snap/v1/transactions`, {
       method: "POST",
@@ -89,12 +97,27 @@ export async function createSnapToken(
       body: JSON.stringify(payload)
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(`Midtrans API error: ${errorData.error_messages?.[0] || response.statusText}`);
+    console.log('Midtrans API response status:', response.status);
+
+    // Always get the text first to handle both JSON and non-JSON responses
+    const responseText = await response.text();
+    let data;
+    
+    try {
+      // Try to parse as JSON
+      data = JSON.parse(responseText);
+    } catch {
+      console.error('Failed to parse response as JSON:', responseText.substring(0, 200));
+      throw new Error(`Invalid response from Midtrans: ${response.status}`);
     }
 
-    const data = await response.json();
+    if (!response.ok) {
+      const errorMessage = data.error_messages 
+        ? data.error_messages[0] 
+        : `API Error: ${response.status}`;
+      throw new Error(errorMessage);
+    }
+
     return {
       token: data.token,
       redirectUrl: data.redirect_url
@@ -123,12 +146,26 @@ export async function getTransactionStatus(orderId: string) {
       }
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(`Midtrans API error: ${errorData.error_messages?.[0] || response.statusText}`);
+    // Always get the text first to handle both JSON and non-JSON responses
+    const responseText = await response.text();
+    let data;
+    
+    try {
+      // Try to parse as JSON
+      data = JSON.parse(responseText);
+    } catch {
+      console.error('Failed to parse response as JSON:', responseText.substring(0, 200));
+      throw new Error(`Invalid response from Midtrans: ${response.status}`);
     }
 
-    return await response.json();
+    if (!response.ok) {
+      const errorMessage = data.error_messages 
+        ? data.error_messages[0] 
+        : `API Error: ${response.status}`;
+      throw new Error(errorMessage);
+    }
+
+    return data;
   } catch (error) {
     console.error("Error getting transaction status:", error);
     throw error;

@@ -1,122 +1,99 @@
-# Midtrans Payment Integration Documentation
+# Midtrans Payment Integration
 
-This document provides an overview of the Midtrans payment integration implemented in the SaaS Cashier application.
+This document provides an overview of the Midtrans payment integration in the application and how to test it.
 
 ## Overview
 
-The integration allows users to:
-1. Try the Pro plan for free for 2 days
-2. Pay for the Pro subscription using Midtrans (in sandbox mode for testing)
+The application uses Midtrans Snap for payment processing. Midtrans is a popular payment gateway in Indonesia that supports various payment methods such as credit cards, bank transfers, e-wallets, and more.
 
 ## Configuration
 
-### Environment Variables
-
-Add these variables to your `.env.local` file:
+The following environment variables need to be set in the `.env.local` file:
 
 ```
-# Midtrans Sandbox credentials (replace with actual sandbox keys)
-NEXT_PUBLIC_MIDTRANS_CLIENT_KEY=SB-Mid-client-YOUR_CLIENT_KEY
-MIDTRANS_SERVER_KEY=SB-Mid-server-YOUR_SERVER_KEY
-
-# Application URL
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+# Midtrans credentials (Sandbox)
+MIDTRANS_SERVER_KEY=YOUR_SERVER_KEY_HERE
+NEXT_PUBLIC_MIDTRANS_CLIENT_KEY=YOUR_CLIENT_KEY_HERE
 ```
 
-## Components and Files
+You can obtain these keys from the Midtrans dashboard:
+1. Log in to the Midtrans dashboard (https://dashboard.sandbox.midtrans.com/ for testing)
+2. Go to Settings > Access Keys
+3. Copy the Server Key and Client Key
 
-### Main Components
+## Integration Points
 
-1. **MidtransPayment Component** (`src/components/subscription/MidtransPayment.tsx`)
-   - Handles payment processing through Midtrans
-   - Loads Midtrans Snap script
-   - Handles free trial activation
+The integration consists of the following components:
 
-2. **SubscriptionBanner Component** (`src/components/dashboard/SubscriptionBanner.tsx`)
-   - Shows subscription status
-   - Displays countdown for trial expiration
-   - Provides upgrade button
+1. **Midtrans Utility (`src/lib/midtrans.ts`)**
+   - Contains functions for creating payment tokens and checking transaction status
+   - Defines subscription plans and their features
+   - Provides helper functions for formatting currency
 
-3. **FeatureLimiter Component** (`src/components/subscription/FeatureLimiter.tsx`)
-   - Restricts access to features based on subscription plan
-   - Shows upgrade prompt when limits are reached
+2. **Payment Component (`src/components/subscription/MidtransPayment.tsx`)**
+   - Client-side component that loads the Midtrans Snap JavaScript
+   - Handles payment flow including success, error, and pending states
+   - Updates payment status on the backend
 
-### API Routes
+3. **Subscription API (`src/app/api/subscription/route.ts`)**
+   - Handles subscription actions (starting trial, upgrading to paid plan)
+   - Creates payment transactions in Midtrans
+   - Updates subscription status based on payment results
 
-1. **Subscription API** (`src/app/api/subscription/route.ts`)
-   - GET: Retrieves subscription status
-   - POST: Starts a trial or creates a payment
-   - PATCH: Updates subscription based on payment status
-
-2. **Midtrans Webhook** (`src/app/api/webhooks/midtrans/route.ts`)
-   - Handles payment notifications from Midtrans
-   - Updates payment and subscription status
-
-3. **Payment Status API** (`src/app/api/payment/status/route.ts`)
-   - Checks payment status from database or Midtrans API
-
-### Utility Files
-
-1. **Midtrans Utils** (`src/lib/midtrans.ts`)
-   - Functions to interact with Midtrans API
-   - Plan definitions and pricing
-
-2. **Subscription Utils** (`src/lib/subscription.ts`)
-   - Functions to manage subscription status
-   - Feature limitations for free plan
-
-## Database Schema
-
-The integration uses two main tables:
-
-1. **user_subscriptions** - Tracks user subscription status
-2. **payments** - Records payment history and status
+4. **Subscription Page (`src/app/(auth)/subscription/page.tsx`)**
+   - Displays available plans
+   - Integrates with the payment component
 
 ## Testing the Integration
 
-1. **Free Trial Testing**:
-   - Create a new account
-   - Click "Coba Pro Gratis 2 Hari" (Try Pro Free for 2 Days)
-   - Verify you have access to all Pro features
-   - After 2 days, verify it reverts to free plan
+To test the Midtrans integration:
 
-2. **Payment Testing (Midtrans Sandbox)**:
-   - Use Midtrans test cards: `4811 1111 1111 1114`
-   - Other test cards can be found in [Midtrans documentation](https://docs.midtrans.com/en/technical-reference/sandbox-test)
+1. Make sure your `.env.local` file has the proper Midtrans credentials set up
+2. Run the application (`npm run dev`)
+3. Navigate to the subscription page
+4. Select a plan and click the payment button
+5. You will be redirected to the Midtrans Snap payment page
+6. Use Midtrans test cards for testing:
+   - Card Number: 4811 1111 1111 1114
+   - Expiry Date: Any future date (e.g., 12/25)
+   - CVV: Any 3 digits (e.g., 123)
+   - OTP/3DS: 112233
 
-## Subscription Flow
+## Debugging
 
-1. **New User**:
-   - Default free plan with trial available
-   - Limited features (1 organization, 10 products, 10 sales)
+If you encounter issues with the payment process:
 
-2. **Trial User**:
-   - 2-day free access to Pro features
-   - After trial, reverts to free plan
+1. Check the browser console for detailed logs
+2. Verify that your Midtrans credentials are correct
+3. Make sure the Midtrans API is available (https://status.midtrans.com/)
+4. Validate that your payment details are formatted correctly
 
-3. **Pro User**:
-   - Unlimited organizations and products
-   - Access to all premium features
-   - Subscription valid for 1 month from payment date
+For more detailed information, consult the [Midtrans Snap Documentation](https://snap-docs.midtrans.com/).
 
-## Security Considerations
+## Production Deployment
 
-For production, implement these additional security measures:
+Before deploying to production:
 
-1. Verify Midtrans webhook signatures
-2. Use HTTPS for all API endpoints
-3. Add proper error handling and logging
-4. Consider adding CSRF protection for payment routes
+1. Update the Midtrans environment variables to use production credentials
+2. Update the Midtrans API URLs in the code to point to the production endpoints
+3. Test thoroughly in a staging environment
+4. Make sure error handling is robust for all payment scenarios
 
-## Troubleshooting
+## Common Issues and Solutions
 
-Common issues:
+1. **Script loading failure**
+   - Make sure the client key is correctly set in the environment variables
+   - Check network connectivity to Midtrans domains
 
-1. **Payment not processed**: Check Midtrans dashboard for transaction status
-2. **Webhook not working**: Ensure webhook URL is accessible from the internet
-3. **Trial not starting**: Check database connections and permissions
+2. **Payment token creation failure**
+   - Verify server key is correct
+   - Ensure payload format matches Midtrans requirements
+   - Check for any restrictions on your Midtrans account
 
-## Useful Resources
+3. **Callback issues**
+   - Ensure callback URLs are correctly set
+   - Check that your application can handle both successful and failed payments
 
-- [Midtrans Documentation](https://docs.midtrans.com/)
-- [Midtrans Dashboard](https://dashboard.sandbox.midtrans.com/) 
+4. **Invalid transaction status**
+   - Verify order IDs are unique across transactions
+   - Check transaction status directly in the Midtrans dashboard 

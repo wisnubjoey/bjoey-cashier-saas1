@@ -23,6 +23,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { withAdminAuth } from "@/components/withAdminAuth";
+import FeatureLimiter from "@/components/subscription/FeatureLimiter";
 
 interface Product {
   id: string;
@@ -42,6 +43,7 @@ function ProductsPage({ params }: { params: Promise<{ organizationId: string }> 
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [showAddFeatureLimiter, setShowAddFeatureLimiter] = useState(false);
 
   useEffect(() => {
     fetchProducts();
@@ -70,7 +72,14 @@ function ProductsPage({ params }: { params: Promise<{ organizationId: string }> 
   }
 
   const handleAddProduct = () => {
-    router.push(`/organizations/${organizationId}/products/new`);
+    if (products.length >= 10) {
+      // Check if we should show the feature limiter
+      // The component itself will check subscription status
+      // This is just a UI optimization to avoid an unnecessary API request
+      setShowAddFeatureLimiter(true);
+    } else {
+      router.push(`/organizations/${organizationId}/products/new`);
+    }
   };
 
   const handleEditProduct = (id: string) => {
@@ -132,9 +141,17 @@ function ProductsPage({ params }: { params: Promise<{ organizationId: string }> 
     <div className="p-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Products</h1>
-        <Button onClick={handleAddProduct}>
-          <Plus className="mr-2 h-4 w-4" /> Add Product
-        </Button>
+        {showAddFeatureLimiter ? (
+          <FeatureLimiter feature="products" currentCount={products.length}>
+            <Button onClick={() => router.push(`/organizations/${organizationId}/products/new`)}>
+              <Plus className="mr-2 h-4 w-4" /> Add Product
+            </Button>
+          </FeatureLimiter>
+        ) : (
+          <Button onClick={handleAddProduct}>
+            <Plus className="mr-2 h-4 w-4" /> Add Product
+          </Button>
+        )}
       </div>
       
       <div className="mb-6">

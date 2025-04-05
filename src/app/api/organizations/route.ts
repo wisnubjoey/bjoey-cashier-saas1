@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { organizations } from '@/lib/db/schema';
 import { auth } from '@clerk/nextjs/server';
 import { eq, and } from 'drizzle-orm';
+import { canUseFeature } from "@/lib/subscription";
 
 // GET - Fetch all organizations for the current user
 export async function GET() {
@@ -36,6 +37,22 @@ export async function POST(req: Request) {
     
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    // Count existing organizations to check subscription limits
+    const orgCount = await db.query.organizations.findMany({
+      where: eq(organizations.userId, userId),
+    });
+    
+    const currentCount = orgCount.length;
+    
+    // Check if user can create more organizations based on their subscription
+    const canCreate = await canUseFeature(userId, 'organizations', currentCount);
+    
+    if (!canCreate) {
+      return NextResponse.json({
+        error: 'You have reached the organization limit for your plan. Please upgrade to create more organizations.'
+      }, { status: 403 });
     }
     
     const { name, adminPassword } = await req.json();

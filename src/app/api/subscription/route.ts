@@ -40,9 +40,11 @@ export async function POST(req: NextRequest) {
   
   try {
     const { action } = await req.json();
+    console.log("Subscription action:", action, "for user:", userId);
     
     // Get current user subscription
     const subscription = await getUserSubscription(userId);
+    console.log("Current subscription status:", subscription.status);
     
     // Start free trial
     if (action === "startTrial") {
@@ -68,42 +70,74 @@ export async function POST(req: NextRequest) {
         userFirstName = user.firstName || userFirstName;
         userLastName = user.lastName || userLastName;
         userEmail = user.emailAddresses[0]?.emailAddress || userEmail;
+        
+        console.log("User info retrieved:", { 
+          userFirstName, 
+          userLastName, 
+          userEmail: userEmail.substring(0, 3) + "..." 
+        });
       } catch (error) {
         console.error("Error fetching user details:", error);
+        return NextResponse.json({ 
+          error: "Could not fetch user details. Please try again." 
+        }, { status: 500 });
       }
       
       // Generate unique order ID
       const orderId = `ORDER-${createId()}-${Date.now()}`;
+      console.log("Generated order ID:", orderId);
       
       // Create Midtrans payment token
-      const { token, redirectUrl } = await createSnapToken(
-        orderId,
-        PLANS.pro.price,
-        {
-          firstName: userFirstName, 
-          lastName: userLastName, 
-          email: userEmail
-        }
-      );
-      
-      // Store payment details in database
-      await db.insert(payments).values({
-        id: createId(),
-        userId,
-        amount: PLANS.pro.price.toString(), // Convert to string
-        status: "pending",
-        midtransOrderId: orderId,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-      
-      return NextResponse.json({ token, redirectUrl, orderId });
+      try {
+        console.log("Calling Midtrans with amount:", PLANS.pro.price);
+        
+        const { token, redirectUrl } = await createSnapToken(
+          orderId,
+          PLANS.pro.price,
+          {
+            firstName: userFirstName, 
+            lastName: userLastName, 
+            email: userEmail
+          }
+        );
+        
+        console.log("Midtrans token received:", token ? "success" : "null");
+        console.log("Redirect URL:", redirectUrl ? redirectUrl.substring(0, 30) + "..." : "null");
+        
+        // Store payment details in database
+        await db.insert(payments).values({
+          id: createId(),
+          userId,
+          amount: PLANS.pro.price.toString(), // Convert to string
+          status: "pending",
+          midtransOrderId: orderId,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+        
+        console.log("Midtrans token created:", { token: token ? "exists" : "null", redirectUrl });
+        
+        return NextResponse.json({ token, redirectUrl, orderId });
+      } catch (error) {
+        console.error("Error creating Midtrans payment:", error);
+        const errorMessage = error instanceof Error 
+          ? error.message 
+          : "Payment service temporarily unavailable";
+        
+        console.error("Detailed error:", errorMessage);
+        
+        return NextResponse.json({ 
+          error: errorMessage 
+        }, { status: 500 });
+      }
     }
     
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   } catch (error) {
     console.error("Error processing subscription:", error);
-    return NextResponse.json({ error: "Failed to process subscription" }, { status: 500 });
+    return NextResponse.json({ 
+      error: "Failed to process subscription. Please try again later." 
+    }, { status: 500 });
   }
 }
 

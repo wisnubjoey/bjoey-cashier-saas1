@@ -4,10 +4,20 @@ import { useState, useEffect, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { FREE_PLAN_LIMITS } from "@/lib/subscription";
+
+// Don't import server-only code directly
+// Instead, define the limits here
+const FREE_PLAN_LIMITS = {
+  organizations: 1,
+  products: 10,
+  sales: 10,
+};
+
+// Define the type based on the limits object
+type FeatureType = keyof typeof FREE_PLAN_LIMITS;
 
 interface FeatureLimiterProps {
-  feature: keyof typeof FREE_PLAN_LIMITS;
+  feature: FeatureType;
   currentCount: number;
   children: ReactNode;
 }

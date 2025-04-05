@@ -35,7 +35,7 @@ export default function RootLayout({
         <body className={`${inter.variable} ${poppins.variable} antialiased`}>
           
           {children}
-          <Toaster />
+          <Toaster position="top-right" richColors />
         </body>
       </html>
     </ClerkProvider>
