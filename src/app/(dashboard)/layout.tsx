@@ -1,5 +1,6 @@
 import Link from "next/link";
 import "./dashboard.css";
+import SubscriptionBanner from "@/components/dashboard/SubscriptionBanner";
 
 export default function DashboardLayout({
   children,
@@ -16,6 +17,9 @@ export default function DashboardLayout({
           
         </div>
       </header>
+      <div className="container mx-auto px-4 my-3">
+        <SubscriptionBanner />
+      </div>
       <main className="flex-grow">
         {children}
       </main>

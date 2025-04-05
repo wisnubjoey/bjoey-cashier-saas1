@@ -2,8 +2,25 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useState, useEffect } from "react";
 
 export function Hero() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  
+  useEffect(() => {
+    // Check if user is logged in
+    const checkAuth = async () => {
+      try {
+        const token = localStorage.getItem('clerk-db-jwt');
+        setIsLoggedIn(!!token);
+      } catch (error) {
+        console.error('Error checking auth:', error);
+      }
+    };
+    
+    checkAuth();
+  }, []);
+  
   return (
     <section className="py-16 md:py-24 bg-white">
       <div className="container mx-auto px-4">
@@ -17,24 +34,51 @@ export function Hero() {
               Manage inventory, process sales, and view reports from anywhere.
             </p>
             <div className="flex flex-wrap gap-4">
-              <Link 
-                href="/register" 
-                className="bg-black text-white px-6 py-3 rounded-md hover:bg-gray-800 transition-colors inline-block font-medium"
-              >
-                Try For Free
-              </Link>
-              <Link 
-                href="/pricing" 
-                className="border border-black px-6 py-3 rounded-md hover:bg-gray-100 transition-colors inline-block font-medium"
-              >
-                View Pricing
-              </Link>
+              {isLoggedIn ? (
+                <>
+                  <Link 
+                    href="/dashboard" 
+                    className="bg-black text-white px-6 py-3 rounded-md hover:bg-gray-800 transition-colors inline-block font-medium"
+                  >
+                    Go to Dashboard
+                  </Link>
+                  <Link 
+                    href="/subscription/upgrade" 
+                    className="bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 transition-colors inline-block font-medium"
+                  >
+                    Try Pro Free for 2 Days
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link 
+                    href="/register" 
+                    className="bg-black text-white px-6 py-3 rounded-md hover:bg-gray-800 transition-colors inline-block font-medium"
+                  >
+                    Create Account
+                  </Link>
+                  <Link 
+                    href="/login" 
+                    className="border border-black px-6 py-3 rounded-md hover:bg-gray-100 transition-colors inline-block font-medium"
+                  >
+                    Login
+                  </Link>
+                </>
+              )}
             </div>
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"></path>
-              </svg>
-              <span>No credit card required</span>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"></path>
+                </svg>
+                <span>No credit card required</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"></path>
+                </svg>
+                <span>Free 2-day Pro trial</span>
+              </div>
             </div>
           </div>
           <div className="md:w-1/2">

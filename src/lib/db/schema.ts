@@ -1,12 +1,13 @@
-import { pgTable, text, timestamp, integer, pgEnum, decimal } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, integer, pgEnum, decimal, boolean } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { createId } from '@paralleldrive/cuid2';
 
 // Enums
-export const subscriptionStatusEnum = pgEnum('subscription_status', ['active', 'canceled', 'past_due']);
+export const subscriptionStatusEnum = pgEnum('subscription_status', ['active', 'canceled', 'past_due', 'trial']);
 export const userRoleEnum = pgEnum('user_role', ['admin', 'manager', 'cashier']);
 export const paymentMethodEnum = pgEnum('payment_method', ['cash', 'card', 'transfer', 'other']);
 export const stockReasonEnum = pgEnum('stock_reason', ['sale', 'purchase', 'adjustment', 'return']);
+export const paymentStatusEnum = pgEnum('payment_status', ['pending', 'success', 'failed', 'expired']);
 
 // Organizations (Tenant)
 export const organizations = pgTable('organizations', {
@@ -56,6 +57,36 @@ export const saleItems = pgTable('sale_items', {
   quantity: integer('quantity').notNull(),
   price: decimal('price', { precision: 10, scale: 2 }).notNull(),
   subtotal: decimal('subtotal', { precision: 10, scale: 2 }).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// User Subscriptions
+export const userSubscriptions = pgTable('user_subscriptions', {
+  id: text('id').primaryKey().$defaultFn(() => createId()),
+  userId: text('user_id').notNull(), // Clerk user ID
+  status: subscriptionStatusEnum('status').notNull().default('trial'),
+  plan: text('plan').notNull().default('free'),
+  isTrialUsed: boolean('is_trial_used').default(false),
+  trialStartDate: timestamp('trial_start_date'),
+  trialEndDate: timestamp('trial_end_date'),
+  currentPeriodStart: timestamp('current_period_start'),
+  currentPeriodEnd: timestamp('current_period_end'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Payments
+export const payments = pgTable('payments', {
+  id: text('id').primaryKey().$defaultFn(() => createId()),
+  userId: text('user_id').notNull(), // Clerk user ID
+  amount: decimal('amount', { precision: 10, scale: 2 }).notNull(),
+  currency: text('currency').default('IDR').notNull(),
+  status: paymentStatusEnum('status').notNull().default('pending'),
+  midtransOrderId: text('midtrans_order_id'),
+  midtransTransactionId: text('midtrans_transaction_id'),
+  paymentType: text('payment_type'),
+  metadata: text('metadata'), // JSON stringified additional data
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -127,5 +158,16 @@ export const stockHistoryRelations = relations(stockHistory, ({ one }) => ({
   product: one(products, {
     fields: [stockHistory.productId],
     references: [products.id],
+  }),
+}));
+
+export const userSubscriptionsRelations = relations(userSubscriptions, ({ many }) => ({
+  payments: many(payments),
+}));
+
+export const paymentsRelations = relations(payments, ({ one }) => ({
+  userSubscription: one(userSubscriptions, {
+    fields: [payments.userId],
+    references: [userSubscriptions.userId],
   }),
 }));
