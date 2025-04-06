@@ -8,6 +8,7 @@ const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY || "";
 const MIDTRANS_CLIENT_KEY = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || "";
 const MIDTRANS_SNAP_URL = "https://app.sandbox.midtrans.com/snap/snap.js";
 const MIDTRANS_API_URL = "https://api.sandbox.midtrans.com";
+const MIDTRANS_SNAP_API_URL = "https://app.sandbox.midtrans.com";
 
 // Configuration for production (to be used later)
 // const MIDTRANS_SNAP_URL = "https://app.midtrans.com/snap/snap.js";
@@ -20,6 +21,7 @@ export const MIDTRANS_CLIENT_SNAP_URL = MIDTRANS_SNAP_URL;
 console.log('Midtrans configuration loaded:');
 console.log('- Client Key exists:', !!MIDTRANS_CLIENT_KEY);
 console.log('- Server Key exists:', !!MIDTRANS_SERVER_KEY);
+console.log('- Server Key length:', MIDTRANS_SERVER_KEY.length);
 
 export const PLANS = {
   free: {
@@ -62,7 +64,13 @@ export async function createSnapToken(
     email: string;
   }
 ) {
+  // Ensure credentials are available
+  if (!MIDTRANS_SERVER_KEY) {
+    throw new Error("MIDTRANS_SERVER_KEY is not set. Please check your environment variables.");
+  }
+  
   const encodedServerKey = Buffer.from(`${MIDTRANS_SERVER_KEY}:`).toString("base64");
+  console.log('Auth header:', `Basic ${encodedServerKey.substring(0, 20)}...`);
   
   const payload = {
     transaction_details: {
@@ -87,7 +95,11 @@ export async function createSnapToken(
   console.log('Creating Midtrans transaction with payload:', JSON.stringify(payload));
   
   try {
-    const response = await fetch(`${MIDTRANS_API_URL}/snap/v1/transactions`, {
+    // Correct Snap endpoint URL according to documentation
+    const apiUrl = `${MIDTRANS_SNAP_API_URL}/snap/v1/transactions`;
+    console.log('Requesting Midtrans API at URL:', apiUrl);
+    
+    const response = await fetch(apiUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -98,9 +110,12 @@ export async function createSnapToken(
     });
 
     console.log('Midtrans API response status:', response.status);
+    console.log('Midtrans API response statusText:', response.statusText);
 
     // Always get the text first to handle both JSON and non-JSON responses
     const responseText = await response.text();
+    console.log('Midtrans response preview:', responseText.substring(0, 100) + '...');
+    
     let data;
     
     try {

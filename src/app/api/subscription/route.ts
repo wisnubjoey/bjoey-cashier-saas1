@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
           updatedAt: new Date(),
         });
         
-        console.log("Midtrans token created:", { token: token ? "exists" : "null", redirectUrl });
+        console.log("Payment record created, returning token to client");
         
         return NextResponse.json({ token, redirectUrl, orderId });
       } catch (error) {
